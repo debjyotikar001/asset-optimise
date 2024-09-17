@@ -1,0 +1,40 @@
+{
+  "name": "debjyotikar001/asset-optimise",
+  "description": "A Laravel package that optimizes front-end assets by minifying HTML, CSS, and JavaScript, enhancing page load speeds and save bandwidth.",
+  "keywords": [
+    "laravel",
+    "asset",
+    "minification",
+    "optimization",
+    "compression",
+    "html",
+    "css",
+    "javascript"
+  ],
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Debjyotikar001\\AssetOptimise\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Debjyoti Kar",
+      "email": "debjyotikar001@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=8.0",
+    "illuminate/support": "^9.0|^10.0|^11.0",
+    "illuminate/http": "^9.0|^10.0|^11.0",
+    "hexydec/htmldoc": "^1.0"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Debjyotikar001\\AssetOptimise\\AssetOptimiseServiceProvider"
+      ]
+    }
+  }
+}
