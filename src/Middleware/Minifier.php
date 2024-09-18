@@ -21,31 +21,20 @@ class Minifier
     if ($response->isSuccessful() && config('assetoptimise.enabled')) {
       $html = $response->getContent();
         
-      // Skip sections between <!-- no-optimise --> and <!-- /no-optimise -->
-      $pattern = '/<!--\s*no-optimise\s*-->(.*?)<!--\s*\/no-optimise\s*-->/is';
-      preg_match_all($pattern, $html, $matches);
-
-      // Replace
-      foreach ($matches[1] as $index => $fullMatch) {
-        $html = str_replace($fullMatch, "###NO_OPTIMISE_PLACEHOLDER_$index###", $html);
-      }
+      // Skip no-optimise comment sections
+      $no_optimise = $this->replace('/<!--\s*no-optimise\s*-->(.*?)<!--\s*\/no-optimise\s*-->/is', $html, 'NO_OPTIMISE', 1);
+      $html = $no_optimise['html'];
         
       // Skip inline css
-      if (config('assetoptimise.inline_css')) {
-        $css_pattern = '/<style\b[^>]*>(.*?)<\/style>/is';
-        preg_match_all($css_pattern, $html, $css_matches);
-        foreach ($css_matches[0] as $index => $fullMatch) {
-          $html = str_replace($fullMatch, "###NOT_OPTIMISE_CSS_PLACEHOLDER_$index###", $html);
-        }
+      if (config('assetoptimise.skip_css')) {
+        $skip_css = $this->replace('/<style\b[^>]*>(.*?)<\/style>/is', $html, 'SKIP_CSS');
+        $html = $skip_css['html'];
       }
 
       // Skip inline js
-      if (config('assetoptimise.inline_js')) {
-        $js_pattern = '/<script\b[^>]*>(.*?)<\/script>/is';
-        preg_match_all($js_pattern, $html, $js_matches);
-        foreach ($js_matches[0] as $index => $fullMatch) {
-          $html = str_replace($fullMatch, "###NOT_OPTIMISE_JS_PLACEHOLDER_$index###", $html);
-        }
+      if (config('assetoptimise.skip_js')) {
+        $skip_js = $this->replace('/<script\b[^>]*>(.*?)<\/script>/is', $html, 'SKIP_JS');
+        $html = $skip_js['html'];
       }
 
       // minify
@@ -55,27 +44,42 @@ class Minifier
       $html = $doc->save();
 
       // Restore
-      foreach ($matches[1] as $index => $fullMatch) {
-        $html = str_replace("###NO_OPTIMISE_PLACEHOLDER_$index###", $fullMatch, $html);
-      }
+      $html = $this->restore($no_optimise['matches'], $html, 'NO_OPTIMISE');
 
       // inline css
-      if (config('assetoptimise.inline_css')) {
-        foreach ($css_matches[0] as $index => $fullMatch) {
-          $html = str_replace("###NOT_OPTIMISE_CSS_PLACEHOLDER_$index###", $fullMatch, $html);
-        }
+      if (config('assetoptimise.skip_css')) {
+        $html = $this->restore($skip_css['matches'], $html, 'SKIP_CSS');
       }
 
       // inline js
-      if (config('assetoptimise.inline_js')) {
-        foreach ($js_matches[0] as $index => $fullMatch) {
-          $html = str_replace("###NOT_OPTIMISE_JS_PLACEHOLDER_$index###", $fullMatch, $html);
-        }
+      if (config('assetoptimise.skip_js')) {
+        $html = $this->restore($skip_js['matches'], $html, 'SKIP_JS');
       }
 
       $response->setContent($html);
     }
 
     return $response;
+  }
+
+  /**
+   * Replace HTML with placeholder
+   */
+  protected function replace($pattern, $html, $placeholder, $match_index = 0) {
+    preg_match_all($pattern, $html, $matches);
+    foreach ($matches[$match_index] as $index => $fullMatch) {
+      $html = str_replace($fullMatch, "###" . $placeholder . "_PLACEHOLDER_$index###", $html);
+    }
+    return ['html' => $html, 'matches' => $matches[$match_index]];
+  }
+
+  /**
+   * Restore placeholder with HTML
+   */
+  protected function restore($matches, $html, $placeholder) {
+    foreach ($matches as $index => $fullMatch) {
+      $html = str_replace("###" . $placeholder . "_PLACEHOLDER_$index###", $fullMatch, $html);
+    }
+    return $html;
   }
 }

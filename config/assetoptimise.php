@@ -35,7 +35,7 @@ return [
   | Default: false
   |
   */
-  'inline_css' => env('ASSETOPTIMISE_INLINE_CSS', false),
+  'skip_css' => env('ASSETOPTIMISE_SKIP_CSS', false),
 
   /*
   |--------------------------------------------------------------------------
@@ -49,6 +49,6 @@ return [
   | Default: false
   |
   */
-  'inline_js' => env('ASSETOPTIMISE_INLINE_JS', false),
+  'skip_js' => env('ASSETOPTIMISE_SKIP_JS', false),
 
 ];
