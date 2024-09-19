@@ -21,17 +21,19 @@ class Minifier
     if ($response->isSuccessful() && config('assetoptimise.enabled')) {
       $html = $response->getContent();
         
-      // Skip no-optimise comment sections
       $no_optimise = $this->replace('/<!--\s*no-optimise\s*-->(.*?)<!--\s*\/no-optimise\s*-->/is', $html, 'NO_OPTIMISE', 1);
       $html = $no_optimise['html'];
-        
-      // Skip inline css
+
+      if (config('assetoptimise.skip_comment')) {
+        $skip_comment = $this->replace('/<!--(.*?)-->/is', $html, 'SKIP_COMMENT');
+        $html = $skip_comment['html'];
+      }
+
       if (config('assetoptimise.skip_css')) {
         $skip_css = $this->replace('/<style\b[^>]*>(.*?)<\/style>/is', $html, 'SKIP_CSS');
         $html = $skip_css['html'];
       }
 
-      // Skip inline js
       if (config('assetoptimise.skip_js')) {
         $skip_js = $this->replace('/<script\b[^>]*>(.*?)<\/script>/is', $html, 'SKIP_JS');
         $html = $skip_js['html'];
@@ -43,15 +45,16 @@ class Minifier
       $doc->minify();
       $html = $doc->save();
 
-      // Restore
       $html = $this->restore($no_optimise['matches'], $html, 'NO_OPTIMISE');
 
-      // inline css
+      if (config('assetoptimise.skip_comment')) {
+        $html = $this->restore($skip_comment['matches'], $html, 'SKIP_COMMENT');
+      }
+
       if (config('assetoptimise.skip_css')) {
         $html = $this->restore($skip_css['matches'], $html, 'SKIP_CSS');
       }
 
-      // inline js
       if (config('assetoptimise.skip_js')) {
         $html = $this->restore($skip_js['matches'], $html, 'SKIP_JS');
       }

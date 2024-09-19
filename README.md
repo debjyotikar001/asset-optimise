@@ -112,17 +112,24 @@ If you want to skip specific sections of code from being minified using `<!-- no
 ```
 
 ### Skip Inline CSS
-If you want to skip inline CSS (within `<style>` tags in your HTML) optimization, then set `true` on `inline_css` in the `config/assetoptimise.php` file, default `false`. For example:
+If you want to skip inline CSS (within `<style>` tags in your HTML) optimization. Then set `true` on `skip_css` in the `config/assetoptimise.php` file, default `false`. For example:
 
 ```php
-'inline_css' => env('ASSETOPTIMISE_INLINE_CSS', true),
+'skip_css' => env('ASSETOPTIMISE_SKIP_CSS', true),
 ```
 
 ### Skip Inline JavaScript
-If you want to skip inline JavaScript (within `<script>` tags in your HTML) optimization, then set `true` on `inline_js` in the `config/assetoptimise.php` file, default `false`. For example:
+If you want to skip inline JavaScript (within `<script>` tags in your HTML) optimization. Then set `true` on `skip_js` in the `config/assetoptimise.php` file, default `false`. For example:
 
 ```php
-'inline_js' => env('ASSETOPTIMISE_INLINE_JS', true),
+'skip_js' => env('ASSETOPTIMISE_SKIP_JS', true),
+```
+
+### Skip HTML Comments
+If you want to skip all HTML comments from the output. Then set `true` on `skip_comment` in the `config/assetoptimise.php` file default `false`. For example:
+
+```php
+'skip_comment' => env('ASSETOPTIMISE_SKIP_COMMENT', true),
 ```
 
 ## Changelog

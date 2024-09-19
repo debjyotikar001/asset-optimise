@@ -51,4 +51,16 @@ return [
   */
   'skip_js' => env('ASSETOPTIMISE_SKIP_JS', false),
 
+  /*
+  |--------------------------------------------------------------------------
+  | Skip HTML Comments
+  |--------------------------------------------------------------------------
+  |
+  | This option will skip all HTML comments from the output.
+  |
+  | Default: false
+  |
+  */
+  'skip_comment' => env('ASSETOPTIMISE_SKIP_COMMENT', false),
+
 ];
