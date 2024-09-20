@@ -7,7 +7,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
- 
+
 return [
   /*
   |--------------------------------------------------------------------------
@@ -62,5 +62,22 @@ return [
   |
   */
   'skip_comment' => env('ASSETOPTIMISE_SKIP_COMMENT', false),
+
+  /*
+  |--------------------------------------------------------------------------
+  | Skip or Ignore Routes Urls
+  |--------------------------------------------------------------------------
+  |
+  | Here you can specify routes urls paths, which you don't want to optimise.
+  | You can use '*' as wildcard.
+  |
+  */
+  'skip_urls' => [
+      // '/',
+      // 'about',
+      // 'user/*',
+      // '*_dashboard',
+      // '*/download/*',
+    ],
 
 ];

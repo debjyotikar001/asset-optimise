@@ -5,10 +5,11 @@ Asset Optimise is a powerful and lightweight Laravel package designed to enhance
 ## Key Features:
 
 1. Minifies HTML, CSS, and JavaScript for faster loading.
-2. Configurable to skip minification for inline CSS and JavaScript, with options set in the configuration file.
+2. Configurable to skip minification for inline CSS, inline JavaScript and HTML comments, with options set in the configuration file.
 3. Supports excluding specific sections of code from being minified using custom HTML comments.
-4. Easy integration with Laravel's middleware system.
-5. Extensible for future updates, including image compression and CDN integration.
+4. Supports excluding specific routes urls paths from being minified.
+5. Easy integration with Laravel's middleware system.
+6. Extensible for future updates, including image compression and CDN integration.
 
 ## Installation
 
@@ -126,11 +127,30 @@ If you want to skip inline JavaScript (within `<script>` tags in your HTML) opti
 ```
 
 ### Skip HTML Comments
-If you want to skip all HTML comments from the output. Then set `true` on `skip_comment` in the `config/assetoptimise.php` file default `false`. For example:
+If you want to skip all HTML comments from the output. Then set `true` on `skip_comment` in the `config/assetoptimise.php` file, default `false`. For example:
 
 ```php
 'skip_comment' => env('ASSETOPTIMISE_SKIP_COMMENT', true),
 ```
+
+### Skip or Ignore specific Routes Urls
+If you want to skip or ignore specific routes urls, then you have to set paths in the `config/assetoptimise.php` file. You can use '*' as wildcard. For example:
+
+```php
+'skip_urls' => [
+    // '/',
+    // 'about',
+    // 'user/*',
+    // '*_dashboard',
+    // '*/download/*',
+  ],
+```
+#### Example URLs:
+- `/`: Home URL will be excluded from minification.
+- `about`: This exact URL will be excluded from minification.
+- `user/*`: Any URL starting with `user/` (like `user/profile`, `user/settings`) will be excluded.
+- `*_dashboard`: Any URL ending with `_dashboard` (like `admin_dashboard`, `user_dashboard`) will be excluded.
+- `*/download/*`: Any URL has `download` (like `pdf/download/001`, `image/download/debjyotikar001`) will be excluded.
 
 ## Changelog
 

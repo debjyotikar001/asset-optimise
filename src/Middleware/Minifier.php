@@ -4,6 +4,7 @@ namespace Debjyotikar001\AssetOptimise\Middleware;
 
 use Closure;
 use hexydec\html\htmldoc;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -20,7 +21,14 @@ class Minifier
 
     if ($response->isSuccessful() && config('assetoptimise.enabled')) {
       $html = $response->getContent();
-        
+
+      if (!empty(config('assetoptimise.skip_urls'))) {
+        $currentUrl = $request->path();
+        foreach (config('assetoptimise.skip_urls') as $item) {
+          if (Str::is($item, $currentUrl)) { return $response; }
+        }
+      }
+
       $no_optimise = $this->replace('/<!--\s*no-optimise\s*-->(.*?)<!--\s*\/no-optimise\s*-->/is', $html, 'NO_OPTIMISE', 1);
       $html = $no_optimise['html'];
 
