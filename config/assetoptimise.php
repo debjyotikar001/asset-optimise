@@ -15,13 +15,27 @@ return [
   |--------------------------------------------------------------------------
   |
   | This option controls whether the asset optimization features are enabled
-  | throughout your application. You may disable it in specific environments
-  | such as during local development or testing to simplify debugging.
+  | throughout your application.
   |
   | Default: true
   |
   */
   'enabled' => env('ASSETOPTIMISE_ENABLED', true),
+
+  /*
+  |--------------------------------------------------------------------------
+  | Allowed Environments
+  |--------------------------------------------------------------------------
+  |
+  | Define the environments where the asset optimization are enabled. You may
+  | disable it in specific environments such as during local development or
+  | testing to simplify debugging. Values must be in a comma (,) separated
+  | string.
+  |
+  | Default: local,production,staging
+  |
+  */
+  'allowed_envs' => env('ASSETOPTIMISE_ALLOWED_ENVS', 'local,production,staging'),
 
   /*
   |--------------------------------------------------------------------------

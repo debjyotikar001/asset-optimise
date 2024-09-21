@@ -5,11 +5,12 @@ Asset Optimise is a powerful and lightweight Laravel package designed to enhance
 ## Key Features:
 
 1. Minifies HTML, CSS, and JavaScript for faster loading.
-2. Configurable to skip minification for inline CSS, inline JavaScript and HTML comments, with options set in the configuration file.
+2. Configurable to skip minification for inline CSS, inline JavaScript and HTML comments.
 3. Supports excluding specific sections of code from being minified using custom HTML comments.
 4. Supports excluding specific routes urls paths from being minified.
-5. Easy integration with Laravel's middleware system.
-6. Extensible for future updates, including image compression and CDN integration.
+5. Configurable to skip minification for specific application Environment.
+6. Easy integration with Laravel's middleware system.
+7. Extensible for future updates, including image compression and CDN integration.
 
 ## Installation
 
@@ -84,6 +85,13 @@ You must set `true` on `enabled` in the `config/assetoptimise.php` file enable a
 'enabled' => env('ASSETOPTIMISE_ENABLED', true),
 ```
 
+### Allowed Environments
+If you want to disable it in specific environments such as during local development or testing to simplify debugging. Then set environments values in a comma (`,`) separated string in the `config/assetoptimise.php` file, default `local,production,staging`. For example:
+
+```php
+'allowed_envs' => env('ASSETOPTIMISE_ALLOWED_ENVS', 'local,production,staging'),
+```
+
 ### Skip specific sections of code
 If you want to skip specific sections of code from being minified using `<!-- no-optimise --> ... <!-- /no-optimise -->` HTML comments. This sections supports HTML, CSS and JavaScript code. For example:
 
@@ -138,11 +146,11 @@ If you want to skip or ignore specific routes urls, then you have to set paths i
 
 ```php
 'skip_urls' => [
-    // '/',
-    // 'about',
-    // 'user/*',
-    // '*_dashboard',
-    // '*/download/*',
+    '/',
+    'about',
+    'user/*',
+    '*_dashboard',
+    '*/download/*',
   ],
 ```
 #### Example URLs:

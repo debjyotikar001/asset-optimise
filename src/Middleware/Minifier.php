@@ -22,6 +22,8 @@ class Minifier
     if ($response->isSuccessful() && config('assetoptimise.enabled')) {
       $html = $response->getContent();
 
+      if (!in_array(config('app.env'), explode(',', config('assetoptimise.allowed_envs')))) { return $response; }
+
       if (!empty(config('assetoptimise.skip_urls'))) {
         $currentUrl = $request->path();
         foreach (config('assetoptimise.skip_urls') as $item) {
