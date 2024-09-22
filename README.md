@@ -10,7 +10,8 @@ Asset Optimise is a powerful and lightweight Laravel package designed to enhance
 4. Supports excluding specific routes urls paths from being minified.
 5. Configurable to skip minification for specific application Environment.
 6. Easy integration with Laravel's middleware system.
-7. Extensible for future updates, including image compression and CDN integration.
+7. Supports Email (HTML, CSS, and JavaScript) minification.
+8. Extensible for future updates, including image compression and CDN integration.
 
 ## Installation
 
@@ -159,6 +160,14 @@ If you want to skip or ignore specific routes urls, then you have to set paths i
 - `user/*`: Any URL starting with `user/` (like `user/profile`, `user/settings`) will be excluded.
 - `*_dashboard`: Any URL ending with `_dashboard` (like `admin_dashboard`, `user_dashboard`) will be excluded.
 - `*/download/*`: Any URL has `download` (like `pdf/download/001`, `image/download/debjyotikar001`) will be excluded.
+
+
+### Enable Email Optimise
+You must set `true` on `email_enabled` in the `config/assetoptimise.php` file to enable asset optimization functionality for emails. For example:
+
+```php
+'email_enabled' => env('ASSETOPTIMISE_EMAIL_ENABLED', true),
+```
 
 ## Changelog
 

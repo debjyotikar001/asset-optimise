@@ -9,3 +9,7 @@
 - Skip Comment.
 - Skip Routes Urls.
 - Environment Control.
+
+## [2.1.0] - 2024-09-22
+### New Feature
+- Email Optimise.

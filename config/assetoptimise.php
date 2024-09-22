@@ -94,4 +94,17 @@ return [
       // '*/download/*',
     ],
 
+  /*
+  |--------------------------------------------------------------------------
+  | Enable Email Optimise
+  |--------------------------------------------------------------------------
+  |
+  | This option controls whether the asset optimization features are enabled
+  | for email.
+  |
+  | Default: true
+  |
+  */
+  'email_enabled' => env('ASSETOPTIMISE_EMAIL_ENABLED', true),
+
 ];
