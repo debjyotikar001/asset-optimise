@@ -16,8 +16,16 @@ class AssetOptimiseServiceProvider extends ServiceProvider
    */
   public function boot(Router $router)
   {
+    // custom helper
+    require_once(__DIR__ . '/Helpers/helpers.php');
+
+    // email minify
     Event::listen(MessageSending::class, EmailMinifier::class);
+
+    // middleware
     $router->aliasMiddleware('assetOptimise', Minifier::class);
+
+    // publish config
     $this->publishes([
       __DIR__.'/../config/assetoptimise.php' => config_path('assetoptimise.php'),
     ], 'config');

@@ -4,14 +4,15 @@ Asset Optimise is a powerful and lightweight Laravel package designed to enhance
 
 ## Key Features:
 
-1. Minifies HTML, CSS, and JavaScript for faster loading.
-2. Configurable to skip minification for inline CSS, inline JavaScript and HTML comments.
-3. Supports excluding specific sections of code from being minified using custom HTML comments.
-4. Supports excluding specific routes urls paths from being minified.
-5. Configurable to skip minification for specific application Environment.
-6. Easy integration with Laravel's middleware system.
-7. Supports Email (HTML, CSS, and JavaScript) minification.
-8. Extensible for future updates, including image compression and CDN integration.
+1. Minifies HTML, CSS, and JavaScript for faster loading. [Read More...](#enable)
+2. Configurable to skip minification for [inline CSS](#skip-inline-css), [inline JavaScript](#skip-inline-javascript) and [HTML comments](#skip-html-comments).
+3. Supports excluding specific sections of code from being minified using custom HTML comments. [Read More...](#skip-specific-sections-of-code)
+4. Supports excluding specific routes urls paths from being minified. [Read More...](#skip-or-ignore-specific-routes-urls)
+5. Configurable to skip minification for specific application Environment. [Read More...](#allowed-environments)
+6. Easy integration with Laravel's middleware system. [Read More...](#register-the-middleware)
+7. Supports Email (HTML, CSS, and JavaScript) minification. [Read More...](#enable-email-optimise)
+8. Support multiple assets (CSS or JavaScript) merge and minify. [Read More...](#merge-and-minify-multiple-assets-css-or-javascript)
+9. Extensible for future updates, including image compression and CDN integration.
 
 ## Installation
 
@@ -161,13 +162,52 @@ If you want to skip or ignore specific routes urls, then you have to set paths i
 - `*_dashboard`: Any URL ending with `_dashboard` (like `admin_dashboard`, `user_dashboard`) will be excluded.
 - `*/download/*`: Any URL has `download` (like `pdf/download/001`, `image/download/debjyotikar001`) will be excluded.
 
-
 ### Enable Email Optimise
 You must set `true` on `email_enabled` in the `config/assetoptimise.php` file to enable asset optimization functionality for emails. For example:
 
 ```php
 'email_enabled' => env('ASSETOPTIMISE_EMAIL_ENABLED', true),
 ```
+
+### Merge and Minify multiple assets (CSS or JavaScript)
+You can use `mergeAssets()` helper function that allows you to merge and minify your multiple CSS or JavaScript files. This function will handle both `public` and `resources` directories, storing the final output file in your storage folder for optimized use.
+
+#### How It Works
+The `mergeAssets()` helper function accepts four parameters:
+- **Array of file paths:** An array of CSS or JavaScript files that you want to merge and minify. The paths can be from both the `public` and `resources` directories.
+- **Output filename:** The name of the final output file (without extension) that will be generated and stored.
+- **File type:** Either `css` or `js`, specifying the type of files being merged.
+- **Cache time:** Time (in `minutes`) after which the merged file will be refreshed. Default is `1440` minutes (24 hours or 1 day).
+
+#### Example (CSS)
+
+```html
+<link rel="stylesheet" href="{{ mergeAssets(
+  [
+    'assets/css/custom.css',
+    'core.css',
+  ],
+  'merged-css',
+  'css',
+  60
+) }}"/>
+```
+The file paths can be from both the `public` and `resources/css` directories. It returns `merged-css.min.css` file url.
+
+#### Example (JS)
+
+```html
+<script src="{{ mergeAssets(
+  [
+    'assets/js/custom.js',
+    'core.js',
+  ],
+  'merged-js',
+  'js',
+  60
+) }}"></script>
+```
+The file paths can be from both the `public` and `resources/js` directories. It returns `merged-js.min.js` file url.
 
 ## Changelog
 

@@ -16,7 +16,10 @@
   "autoload": {
     "psr-4": {
       "Debjyotikar001\\AssetOptimise\\": "src/"
-    }
+    },
+    "files": [
+      "src/Helpers/helpers.php"
+    ]
   },
   "authors": [
     {
