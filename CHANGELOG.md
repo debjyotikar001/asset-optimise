@@ -18,3 +18,7 @@
 ### New Feature
 - Merge and Minify multiple assets.
 - Minify asset.
+
+## [2.2.1] - 2025-02-13
+### New Feature
+- JavaScript encryption for more security.

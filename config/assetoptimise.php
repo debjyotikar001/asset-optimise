@@ -107,4 +107,20 @@ return [
   */
   'email_enabled' => env('ASSETOPTIMISE_EMAIL_ENABLED', true),
 
+  /*
+  |--------------------------------------------------------------------------
+  | JavaScript Encrypt Domains
+  |--------------------------------------------------------------------------
+  |
+  | Here you can specify domains, which was used for JavaScript encrypt.
+  | 
+  | Default: current domain (it will use current app domain)
+  |
+  */
+  'js_encrypt_domains' => [
+    // 'example.com',
+    // 'example1.com',
+    // 'example2.com',
+  ],
+
 ];

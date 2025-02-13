@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\File;
-use hexydec\jslite\jslite;
 use hexydec\css\cssdoc;
+use hexydec\jslite\jslite;
+use Illuminate\Support\Facades\File;
+use Debjyotikar001\AssetOptimise\Helpers\JSEncrypt;
 
 if (!function_exists('mergeAssets')) {
   /**
@@ -11,21 +12,12 @@ if (!function_exists('mergeAssets')) {
    * @param array $filePaths Array of file paths to merge
    * @param string $outputFileName Name of the output file (without extension)
    * @param string $type Type of files ('css' or 'js')
+   * @param bool $jsEncrypt Whether to encrypt JavaScript for added security
    * @param int $cacheTime Time in minutes to check for file updates
    * @return string Path to the merged file
    */
-  function mergeAssets(array $filePaths, string $outputFileName, string $type, int $cacheTime = 1440)
+  function mergeAssets(array $filePaths, string $outputFileName, string $type, bool $jsEncrypt = false, int $cacheTime = 1440)
   {
-    $file = "minified/{$type}/{$outputFileName}.min.{$type}";
-    $storePath = storage_path('app/public/' . $file);
-    $assetPath = 'storage/' . $file;
-
-    // output file exists and last modified
-    if (File::exists($storePath)) {
-      if ((time() - File::lastModified($storePath)) < ($cacheTime * 60)) { return asset($assetPath); }
-    }
-
-    // merge files
     $mergedContent = '';
     foreach ($filePaths as $item) {
       if (pathinfo($item)['extension'] !== $type) {
@@ -44,55 +36,28 @@ if (!function_exists('mergeAssets')) {
       }
     }
 
-    if (!File::isDirectory(dirname($storePath))) { File::makeDirectory(dirname($storePath), 0755, true); }
-
-    // minify
-    if ($type === 'css') {
-      $doc = new cssdoc();
-    } elseif ($type === 'js') {
-      $doc = new jslite();
-    } else {
-      throw new \Exception("Unsupported file type: " . $type);
-    }
-
-    $doc->load($mergedContent);
-    $doc->minify();
-    $mergedContent = $doc->compile();
-
-    // output file
-    File::put($storePath, $mergedContent);
-
-    return asset($assetPath);
+    return processAndStoreAsset($mergedContent, $outputFileName, $type, $cacheTime, $jsEncrypt);
   }
 }
 
 if (!function_exists('minifyAsset')) {
   /**
-   * Minify CSS/JS file.
+   * Minify a CSS/JS file.
    *
    * @param string $filePath File path to minify
    * @param string $type Type of file ('css' or 'js')
+   * @param bool $jsEncrypt Whether to encrypt JavaScript for added security
    * @param int $cacheTime Time in minutes to check for file updates
-   * @param string $outputFileName Name of the output file (without extension)
+   * @param string|null $outputFileName Name of the output file (optional)
    * @return string Path to the minified file
    */
-  function minifyAsset(string $filePath, string $type, int $cacheTime = 1440, string $outputFileName = null)
+  function minifyAsset(string $filePath, string $type, bool $jsEncrypt = false, int $cacheTime = 1440, string $outputFileName = null)
   {
     if (pathinfo($filePath)['extension'] !== $type) {
       throw new \Exception("Given file type ({$type}) and file is not same. File: {$filePath}");
     }
 
     $outputFileName = $outputFileName ?? pathinfo($filePath)['filename'];
-    $file = "minified/{$type}/{$outputFileName}.min.{$type}";
-    $storePath = storage_path('app/public/' . $file);
-    $assetPath = 'storage/' . $file;
-
-    // output file exists and last modified
-    if (File::exists($storePath)) {
-      if ((time() - File::lastModified($storePath)) < ($cacheTime * 60)) { return asset($assetPath); }
-    }
-
-    // Read the file contents
     $publicPath = public_path($filePath);
     $resourcePath = resource_path($type . '/' . $filePath);
 
@@ -104,9 +69,33 @@ if (!function_exists('minifyAsset')) {
       throw new \Exception("File does not exist: " . $filePath);
     }
 
+    return processAndStoreAsset($fileContent, $outputFileName, $type, $cacheTime, $jsEncrypt);
+  }
+}
+
+if (!function_exists('processAndStoreAsset')) {
+  /**
+   * Minify and optionally encrypt a CSS/JS asset, then store it.
+   *
+   * @param string $content File content to process
+   * @param string $outputFileName Name of the output file (without extension)
+   * @param string $type Type of file ('css' or 'js')
+   * @param int $cacheTime Cache expiration time in minutes
+   * @param bool $jsEncrypt Whether to encrypt JavaScript
+   * @return string Path to the processed file
+   */
+  function processAndStoreAsset(string $content, string $outputFileName, string $type, int $cacheTime, bool $jsEncrypt)
+  {
+    $file = "minified/{$type}/{$outputFileName}.min.{$type}";
+    $storePath = storage_path('app/public/' . $file);
+    $assetPath = 'storage/' . $file;
+
+    // Check cache validity
+    if (File::exists($storePath) && (time() - File::lastModified($storePath)) < ($cacheTime * 60)) { return asset($assetPath); }
+
     if (!File::isDirectory(dirname($storePath))) { File::makeDirectory(dirname($storePath), 0755, true); }
 
-    // minify
+    // Minify content
     if ($type === 'css') {
       $doc = new cssdoc();
     } elseif ($type === 'js') {
@@ -115,13 +104,25 @@ if (!function_exists('minifyAsset')) {
       throw new \Exception("Unsupported file type: " . $type);
     }
 
-    $doc->load($fileContent);
+    $doc->load($content);
     $doc->minify();
-    $fileContent = $doc->compile();
+    $content = $doc->compile();
 
-    // output file
-    File::put($storePath, $fileContent);
+    // Encrypt JavaScript if enabled
+    if ($type === 'js' && $jsEncrypt) {
+      $JsEncrypt = new JSEncrypt($content);
+      $JsEncrypt->setExpiration("+{$cacheTime} minutes");
+      $domains = config('assetoptimise.js_encrypt_domains', [request()->getHost()]);
 
+      foreach ((array) $domains as $domain) {
+        $JsEncrypt->addDomainName($domain);
+      }
+
+      $content = $JsEncrypt->Obfuscate();
+    }
+
+    // Store processed file
+    File::put($storePath, $content);
     return asset($assetPath);
   }
 }

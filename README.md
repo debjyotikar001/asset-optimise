@@ -11,9 +11,10 @@ Asset Optimise is a powerful and lightweight Laravel package designed to enhance
 5. Configurable to skip minification for specific application Environment. [Read More...](#allowed-environments)
 6. Easy integration with Laravel's middleware system. [Read More...](#register-the-middleware)
 7. Supports Email (HTML, CSS, and JavaScript) minification. [Read More...](#enable-email-optimise)
-8. Support multiple assets (CSS or JavaScript) merge and minify. [Read More...](#merge-and-minify-multiple-assets-css-or-javascript)
-9. Support asset (CSS or JavaScript) minification. [Read More...](#minify-asset-css-or-javascript)
-10. Extensible for future updates, including image compression and CDN integration.
+8. JavaScript encryption with domains support for more security. [Read More...](#javascript-encrypt-domains)
+9. Support multiple assets (CSS or JavaScript) merge and minify. [Read More...](#merge-and-minify-multiple-assets-css-or-javascript)
+10. Support asset (CSS or JavaScript) minification. [Read More...](#minify-asset-css-or-javascript)
+11. Extensible for future updates, including image compression and CDN integration.
 
 ## Installation
 
@@ -169,6 +170,22 @@ You must set `true` on `email_enabled` in the `config/assetoptimise.php` file to
 ```php
 'email_enabled' => env('ASSETOPTIMISE_EMAIL_ENABLED', true),
 ```
+### JavaScript Encrypt Domains
+Add domains in the `config/assetoptimise.php` file for more security, then encrypted JavaScript code will only work on those domains. For example:
+
+```php
+'js_encrypt_domains' => [
+    'example.com',
+    'example1.com',
+    'example2.com',
+  ],
+```
+#### Please Note:
+- JavaScript encryption may slow down application performance.
+- Large scripts can take longer to process.
+- This may cause an error if the code is not written properly. Please use with caution!
+- Although this can provide a high security level, a potentially thief can try to de-obfuscate and reach a closer code to the original one due to the public and open architecture of JavaScript.
+- So it's not recommended to use this to protect sensitive information.
 
 ### Merge and Minify multiple assets (CSS or JavaScript)
 You can use `mergeAssets()` helper function that allows you to merge and minify your multiple CSS or JavaScript files. This function will handle both `public` and `resources` directories, storing the final output file in your storage folder for optimized use. It reduces the number of HTTP requests and speeds up the loading of assets.
@@ -178,6 +195,7 @@ The `mergeAssets()` helper function accepts four parameters:
 - **Array of file paths:** An array of CSS or JavaScript files that you want to merge and minify. The paths can be from both the `public` and `resources` directories.
 - **Output filename:** The name of the final output file (without extension) that will be generated and stored.
 - **File type:** Either `css` or `js`, specifying the type of files being merged.
+- **JavaScript encrypt:** Whether to encrypt JavaScript for extra security. Default is `false`.
 - **Cache time (Optional):** Time (in `minutes`) after which the merged file will be refreshed. Default is `1440` minutes (24 hours or 1 day).
 
 #### Example (CSS)
@@ -204,10 +222,11 @@ The file paths can be from both the `public` and `resources/css` directories. It
     'core.js',
   ],
   'merged-js',
-  'js'
+  'js',
+  true
 ) }}"></script>
 ```
-The file paths can be from both the `public` and `resources/js` directories. It returns `merged-js.min.js` file url.
+The file paths can be from both the `public` and `resources/js` directories. It returns `merged-js.min.js` file url. And it also encrypt the JavaScript code.
 
 ### Minify asset (CSS or JavaScript)
 You can use `minifyAsset()` helper function that allows you to minify your CSS or JavaScript file. This function will handle both `public` and `resources` directories, storing the final output file in your storage folder for optimized use. It helps you to reduce file size, improve page load times and save bandwidth.
@@ -216,6 +235,7 @@ You can use `minifyAsset()` helper function that allows you to minify your CSS o
 The `minifyAsset()` helper function accepts four parameters:
 - **File path:** Path of the CSS or JavaScript file that you want to minify. The path can be from both the `public` and `resources` directories.
 - **File type:** Either `css` or `js`, specifying the type of file being minified.
+- **JavaScript encrypt:** Whether to encrypt JavaScript for extra security. Default is `false`.
 - **Cache time (Optional):** Time (in `minutes`) after which the minified file will be refreshed. Default is `1440` minutes (24 hours or 1 day).
 - **Output filename (Optional):** The name of the final output file (without extension) that will be generated and stored. Default was the given file name.
 
@@ -229,9 +249,9 @@ The file paths can be from both the `public` and `resources/css` directories. It
 #### Example (JS)
 
 ```html
-<script src="{{ minifyAsset('assets/js/custom.js', 'js') }}"></script>
+<script src="{{ minifyAsset('assets/js/custom.js', 'js', true) }}"></script>
 ```
-The file paths can be from both the `public` and `resources/js` directories. It returns `custom.min.js` file url.
+The file paths can be from both the `public` and `resources/js` directories. It returns `custom.min.js` file url. And it also encrypt the JavaScript code.
 
 ## Changelog
 
