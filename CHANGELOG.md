@@ -22,3 +22,7 @@
 ## [2.2.1] - 2025-02-13
 ### New Feature
 - JavaScript encryption for more security.
+
+## [3.0.0] - 2025-03-16
+### Laravel 12 Support
+- Laravel 12 Support added.

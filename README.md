@@ -18,7 +18,7 @@ Asset Optimise is a powerful and lightweight Laravel package designed to enhance
 
 ## Installation
 
-Asset Optimise for Laravel requires PHP 8.0 or higher. This particular version supports Laravel 9.x, 10.x, and 11.x.
+Asset Optimise for Laravel requires PHP 8.0 or higher. This particular version supports Laravel 9.x, 10.x, 11.x, and 12.x.
 
 To get the latest version, simply require the project using [Composer](https://getcomposer.org):
 
