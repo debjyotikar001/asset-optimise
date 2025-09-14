@@ -4,6 +4,7 @@ use hexydec\css\cssdoc;
 use hexydec\jslite\jslite;
 use Illuminate\Support\Facades\File;
 use Debjyotikar001\AssetOptimise\Helpers\JSEncrypt;
+use Debjyotikar001\AssetOptimise\Helpers\FileHelper;
 
 if (!function_exists('mergeAssets')) {
   /**
@@ -103,11 +104,11 @@ if (!function_exists('processAndStoreAsset')) {
     } else {
       throw new \Exception("Unsupported file type: " . $type);
     }
-
+    
     $doc->load($content);
     $doc->minify();
     $content = $doc->compile();
-
+    
     // Encrypt JavaScript if enabled
     if ($type === 'js' && $jsEncrypt) {
       $JsEncrypt = new JSEncrypt($content);
@@ -124,5 +125,16 @@ if (!function_exists('processAndStoreAsset')) {
     // Store processed file
     File::put($storePath, $content);
     return asset($assetPath);
+  }
+}
+
+if (!function_exists('minifyAssets')) {
+  /**
+   * Helper function of minifyAssets to minify and optionally merge CSS/JS assets.
+   *
+   */
+  function minifyAssets(array $filePaths, string $type, array $options = []): string
+  {
+    return FileHelper::minifyAssets($filePaths, $type, $options);
   }
 }
