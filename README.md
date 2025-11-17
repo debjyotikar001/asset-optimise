@@ -188,70 +188,64 @@ Add domains in the `config/assetoptimise.php` file for more security, then encry
 - So it's not recommended to use this to protect sensitive information.
 
 ### Merge and Minify multiple assets (CSS or JavaScript)
-You can use `mergeAssets()` helper function that allows you to merge and minify your multiple CSS or JavaScript files. This function will handle both `public` and `resources` directories, storing the final output file in your storage folder for optimized use. It reduces the number of HTTP requests and speeds up the loading of assets.
+You can use `minifyAssets()` helper function that allows you to merge and minify your multiple CSS or JavaScript files. This function will handle both `public` and `resources` directories, storing the final output file in your storage folder for optimized use. It reduces the number of HTTP requests and speeds up the loading of assets.
 
 #### How It Works
-The `mergeAssets()` helper function accepts four parameters:
-- **Array of file paths:** An array of CSS or JavaScript files that you want to merge and minify. The paths can be from both the `public` and `resources` directories.
-- **Output filename:** The name of the final output file (without extension) that will be generated and stored.
-- **File type:** Either `css` or `js`, specifying the type of files being merged.
-- **JavaScript encrypt:** Whether to encrypt JavaScript for extra security. Default is `false`.
-- **Cache time (Optional):** Time (in `minutes`) after which the merged file will be refreshed. Default is `1440` minutes (24 hours or 1 day).
+The `minifyAssets()` helper function accepts three parameters:
+- **File paths (array):** A list of CSS or JavaScript files that you want to merge and minify. The paths can be from both the `public` and `resources` directories.
+- **File type (string):** Either `css` or `js`, specifying the type of files being merged.
+- **Options (array, Optional):** This options array accepts several data:
+  - **JavaScript encrypt (`'jsEncrypt'`):** Whether to encrypt JavaScript for extra security. Default is `false`.
+  - **Cache time (`'ttl'`):** Time after which the merged file will be refreshed. Default is `7` days. [Learn More](#cache-time)
+  - **Output File name (`'name'`):** The name of the final output file (without extension) that will be generated and stored. Default auto-generated File name.
+  - **Version (`'version'`):** The version can be number (like `2`, `1.0.1`) or string (like `beta`, `testing`). Or it can be null.
+
+##### Cache Time
+Cache time can be in `minutes`, `hours`, `days`, `years`.
+- **Format:** `{number}{unit}`
+- **Units:**
+  - `m` = minutes (max `1440` → `1` day)
+  - `h` = hours   (max `720`  → `30` days)
+  - `d` = days    (max `365`  → `1` year)
+  - `y` = years   (max `5`    → `5` years)
+- **Example:** `7d` → regenerates every `7` days
 
 #### Example (CSS)
 
 ```html
-<link rel="stylesheet" href="{{ mergeAssets(
+<link rel="stylesheet" href="{{ minifyAssets(
   [
     'assets/css/custom.css',
     'core.css',
   ],
-  'merged-css',
   'css',
-  60
+  [
+    'ttl' => '7d',
+    'name' => 'merged-css',
+    'version' => '1.0.1',
+  ]
 ) }}"/>
 ```
-The file paths can be from both the `public` and `resources/css` directories. It returns `merged-css.min.css` file url.
+The file paths can be from both the `public` and `resources/css` directories. It returns `merged-css_v101.min.css` file url.
 
 #### Example (JS)
 
 ```html
-<script src="{{ mergeAssets(
+<script src="{{ minifyAssets(
   [
     'assets/js/custom.js',
     'core.js',
   ],
-  'merged-js',
   'js',
-  true
+  [
+    'jsEncrypt' => true,
+    'ttl' => '1y',
+    'name' => 'merged-js',
+    'version' => 'beta',
+  ]
 ) }}"></script>
 ```
-The file paths can be from both the `public` and `resources/js` directories. It returns `merged-js.min.js` file url. And it also encrypt the JavaScript code.
-
-### Minify asset (CSS or JavaScript)
-You can use `minifyAsset()` helper function that allows you to minify your CSS or JavaScript file. This function will handle both `public` and `resources` directories, storing the final output file in your storage folder for optimized use. It helps you to reduce file size, improve page load times and save bandwidth.
-
-#### How It Works
-The `minifyAsset()` helper function accepts four parameters:
-- **File path:** Path of the CSS or JavaScript file that you want to minify. The path can be from both the `public` and `resources` directories.
-- **File type:** Either `css` or `js`, specifying the type of file being minified.
-- **JavaScript encrypt:** Whether to encrypt JavaScript for extra security. Default is `false`.
-- **Cache time (Optional):** Time (in `minutes`) after which the minified file will be refreshed. Default is `1440` minutes (24 hours or 1 day).
-- **Output filename (Optional):** The name of the final output file (without extension) that will be generated and stored. Default was the given file name.
-
-#### Example (CSS)
-
-```html
-<link rel="stylesheet" href="{{ minifyAsset('app.css', 'css', 120, 'app-minify') }}"/>
-```
-The file paths can be from both the `public` and `resources/css` directories. It returns `app-minify.min.css` file url.
-
-#### Example (JS)
-
-```html
-<script src="{{ minifyAsset('assets/js/custom.js', 'js', true) }}"></script>
-```
-The file paths can be from both the `public` and `resources/js` directories. It returns `custom.min.js` file url. And it also encrypt the JavaScript code.
+The file paths can be from both the `public` and `resources/js` directories. It returns `merged-js_beta.min.js` file url. And it also encrypt the JavaScript code.
 
 ## Changelog
 

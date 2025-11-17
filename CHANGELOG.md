@@ -26,3 +26,11 @@
 ## [3.0.0] - 2025-03-16
 ### Laravel 12 Support
 - Laravel 12 Support added.
+
+## [4.0.0] - 2025-11-17
+### Optimized
+- Overall performance significantly improved.
+- Consolidated `mergeAssets` and `minifyAsset` into a single unified method: `minifyAssets`.
+- Enhanced cache handling — `ttl` now supports `minutes`, `hours`, `days`, and `years`.
+### Added
+- Asset versioning support.
