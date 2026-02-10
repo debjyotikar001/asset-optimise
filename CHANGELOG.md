@@ -34,3 +34,7 @@
 - Enhanced cache handling — `ttl` now supports `minutes`, `hours`, `days`, and `years`.
 ### Added
 - Asset versioning support.
+
+## [4.0.1] - 2026-02-10
+### Added
+- Minified assets clearing support.

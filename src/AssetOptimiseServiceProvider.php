@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Mail\Events\MessageSending;
 use Debjyotikar001\AssetOptimise\Middleware\Minifier;
 use Debjyotikar001\AssetOptimise\Listeners\EmailMinifier;
+use Debjyotikar001\AssetOptimise\Console\ClearMinifiedAssets;
 
 class AssetOptimiseServiceProvider extends ServiceProvider
 {
@@ -37,5 +38,11 @@ class AssetOptimiseServiceProvider extends ServiceProvider
   public function register()
   {
     $this->mergeConfigFrom(__DIR__.'/../config/assetoptimise.php', 'assetoptimise.php');
+
+    if ($this->app->runningInConsole()) {
+      $this->commands([
+        ClearMinifiedAssets::class,
+      ]);
+    }
   }
 }

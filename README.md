@@ -14,7 +14,8 @@ Asset Optimise is a powerful and lightweight Laravel package designed to enhance
 8. JavaScript encryption with domains support for more security. [Read More...](#javascript-encrypt-domains)
 9. Support multiple assets (CSS or JavaScript) merge and minify. [Read More...](#merge-and-minify-multiple-assets-css-or-javascript)
 10. Support asset (CSS or JavaScript) minification. [Read More...](#minify-asset-css-or-javascript)
-11. Extensible for future updates, including image compression and CDN integration.
+11. Provides an Artisan command to clear generated minified assets for storage management. [Read More...](#clear-minified-assets)
+12. Extensible for future updates, including image compression and CDN integration.
 
 ## Installation
 
@@ -246,6 +247,35 @@ The file paths can be from both the `public` and `resources/css` directories. It
 ) }}"></script>
 ```
 The file paths can be from both the `public` and `resources/js` directories. It returns `merged-js_beta.min.js` file url. And it also encrypt the JavaScript code.
+
+### Clear Minified Assets
+
+Asset Optimise stores generated and merged minified assets inside the `storage/app/public/minified` directory. Over time, older or unused minified files may accumulate and increase storage usage. To clean up these files, Asset Optimise provides an Artisan command that allows you to remove minified assets safely.
+
+#### Clear All Minified Assets
+
+This command removes all generated minified assets (both CSS and JavaScript):
+
+```sh
+php artisan asset-optimise:clear-minified
+```
+#### Clear Only CSS Minified Assets
+
+If you want to remove only minified CSS files:
+
+```sh
+php artisan asset-optimise:clear-minified css
+```
+
+#### Clear Only JavaScript Minified Assets
+
+If you want to remove only minified JavaScript files:
+
+```sh
+php artisan asset-optimise:clear-minified js
+```
+
+This command is useful for periodic cleanup, storage management, or when deploying new versions of your assets.
 
 ## Changelog
 
