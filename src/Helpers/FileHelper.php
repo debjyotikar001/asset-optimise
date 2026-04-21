@@ -18,24 +18,59 @@ class FileHelper
    *       'jsEncrypt' => bool (default: false),
    *       'ttl' => string (default: 7d → 7 days),
    *       'name' => string|null (output file name, no extension or path) (default: auto-generated),
-   *       'version' => string|int|null (file version, e.g., 2 → "bundle_v2.css" or beta → "bundle_beta.css")
+   *       'version' => string|int|null (file version, e.g., 2 → "bundle.v2.css" or beta → "bundle.beta.css")
    *     ]
+   * 
    * @return string Path to the processed file
    */
   public static function minifyAssets(array $filePaths, string $type, array $options = []): string
   {
     $ttlSeconds = self::ttl($options['ttl'] ?? '7d'); // cache time
-    $buildFileInfo = self::buildFileInfo($filePaths, $type, $ttlSeconds, $options); // build file paths
+    $resolvedPaths = self::resolvePaths($filePaths, $type); // resolve full file system paths
+    $buildFileInfo = self::buildFileInfo($filePaths, $resolvedPaths, $type, $ttlSeconds, $options); // build file paths
     $assetPath = $buildFileInfo['assetPath'];
 
     // Return asset path, if file was valid
     if ($buildFileInfo['exists']) return $assetPath;
 
     // Process files
-    self::processFiles($filePaths, $type, $buildFileInfo['storePath'], $ttlSeconds, $options['jsEncrypt'] ?? false);
+    self::processFiles($resolvedPaths, $type, $buildFileInfo['storePath'], $ttlSeconds, $options['jsEncrypt'] ?? false);
 
     // Return asset path
     return $assetPath;
+  }
+
+  /**
+   * Resolve full file system paths from given asset paths.
+   *
+   * This method checks both public/ and resources/{type}/ directories
+   * and returns absolute file paths. This avoids resolving paths multiple
+   * times across different methods and reduces filesystem I/O.
+   *
+   * @param array  $filePaths Input asset paths
+   * @param string $type      Asset type ('css' or 'js')
+   *
+   * @return array            Resolved absolute file paths
+   * @throws \Exception       If file does not exist
+   */
+  private static function resolvePaths(array $filePaths, string $type): array
+  {
+    $resolved = [];
+
+    foreach ($filePaths as $path) {
+      $publicPath = public_path($path);
+      $resourcePath = resource_path("{$type}/{$path}");
+
+      if (is_file($publicPath)) {
+        $resolved[] = $publicPath;
+      } elseif (is_file($resourcePath)) {
+        $resolved[] = $resourcePath;
+      } else {
+        throw new \Exception("File does not exist: {$path}");
+      }
+    }
+
+    return $resolved;
   }
 
   /**
@@ -49,6 +84,7 @@ class FileHelper
    *   y = years   (max 5    → 5 years)
    *
    * @param string $value
+   * 
    * @return int TTL in seconds
    * @throws \InvalidArgumentException
    */
@@ -82,9 +118,10 @@ class FileHelper
    * Build file info for minified/merged assets.
    *
    * Responsibilities:
-   * - Determine output filename based on $options['name'] or fallback:
-   *      - single file → use its basename
-   *      - multiple files → md5 hash of all paths
+   * - Determine output filename using base name + hash
+   * - Hash is generated using either:
+   *      - filemtime (fast, default)
+   *      - md5_file (strict mode, reliable)
    * - Append version if provided:
    *      - numeric (e.g. "1.0.1") → becomes ".v101"
    *      - string (e.g. "beta")   → becomes ".beta"
@@ -92,26 +129,54 @@ class FileHelper
    * - Check if stored file exists and is still valid (not expired)
    * - Return file paths and "exists" boolean for cache re-use
    *
-   * @param array  $filePaths Input file paths (single or multiple)
-   * @param string $type    Asset type ('css' or 'js')
-   * @param int    $ttlSeconds  Cache time-to-live in seconds
-   * @param array  $options User options: name, version
+   * @param array  $filePaths     Original input file paths (for naming)
+   * @param array  $resolvedPaths Resolved absolute file paths (for processing)
+   * @param string $type          Asset type ('css' or 'js')
+   * @param int    $ttlSeconds    Cache time-to-live in seconds
+   * @param array  $options       User options: name, version
+   * 
    * @return array {
    *   @var string storePath Full storage path
    *   @var string assetPath Public asset path
    *   @var bool   exists    True if file exists and not expired
    * }
+   * 
+   * @throws \Exception
    */
-  private static function buildFileInfo(array $filePaths, string $type, int $ttlSeconds, array $options = []): array
+  private static function buildFileInfo(array $filePaths, array $resolvedPaths, string $type, int $ttlSeconds, array $options = []): array
   {
     // Resolve name
+    // Step 1: base name (for readability)
     if (!empty($options['name'])) {
-      $name = $options['name'];
+      $baseName = $options['name'];
     } else {
-      $name = (count($filePaths) === 1)
-        ? pathinfo($filePaths[0], PATHINFO_FILENAME) // single file → take basename without extension
-        : md5(implode('|', $filePaths)); // multiple files → md5 of concatenated names
+      $baseName = (count($filePaths) === 1)
+        ? pathinfo($filePaths[0], PATHINFO_FILENAME)
+        : 'bundle';
     }
+
+    // Step 2: generate hash
+    $hashSource = '';
+    $latestSourceMTime = 0;
+
+    foreach ($resolvedPaths as $index => $fullPath) {
+      $mtime = filemtime($fullPath);
+    
+      // Optional strict mode
+      if (config('assetoptimise.strict_hash')) {
+        $hashSource .= md5_file($fullPath);
+      } else {
+        $hashSource .= $filePaths[$index] . $mtime;
+      }
+    
+      $latestSourceMTime = max($latestSourceMTime, $mtime);
+    }
+
+    // short hash (8 chars is enough)
+    $hash = substr(md5($hashSource), 0, 8);
+
+    // FINAL NAME
+    $name = "{$baseName}-{$hash}";
 
     // Handle version
     $version = $options['version'] ?? null;
@@ -129,7 +194,10 @@ class FileHelper
     $assetPath = asset("storage/{$file}");
 
     // Check file existence + expiry
-    $isValid = is_file($storePath) && (filemtime($storePath) + $ttlSeconds >= time());
+    $isValid = is_file($storePath) && (
+      filemtime($storePath) >= $latestSourceMTime &&
+      filemtime($storePath) + $ttlSeconds >= time()
+    );
 
     // Always return
     return [
@@ -146,6 +214,7 @@ class FileHelper
    * @param string $type        Asset type ('css' or 'js')
    * @param int    $ttlSeconds  Cache time-to-live in seconds
    * @param bool   $jsEncrypt   Whether to apply JS encryption/obfuscation
+   * 
    * @return string             Minified (and maybe encrypted) content
    * @throws \Exception
    */
@@ -190,15 +259,20 @@ class FileHelper
   /**
    * Load, merge and save assets with atomic file swap.
    *
-   * @param array  $filePaths   Input file paths relative to public/ or resources/
-   * @param string $type        Asset type ('css' or 'js')
-   * @param string $storePath   Destination path to save merged file
-   * @param int    $ttlSeconds  Cache time-to-live in seconds
-   * @param bool   $jsEncrypt   Whether to apply JS encryption/obfuscation
-   * @throws \Exception         If file type mismatch or file not found
+   * This method uses resolved absolute file paths to avoid repeated
+   * filesystem lookups. It ensures safe concurrent builds using file locks
+   * and minimizes CPU/disk usage under high load using exponential backoff.
+   * 
+   * @param array  $resolvedPaths Resolved absolute file paths
+   * @param string $type          Asset type ('css' or 'js')
+   * @param string $storePath     Destination path to save merged file
+   * @param int    $ttlSeconds    Cache time-to-live in seconds
+   * @param bool   $jsEncrypt     Whether to apply JS encryption/obfuscation
+   * 
    * @return void
+   * @throws \Exception         If file type mismatch or file not found
    */
-  private static function processFiles(array $filePaths, string $type, string $storePath, int $ttlSeconds, bool $jsEncrypt): void
+  private static function processFiles(array $resolvedPaths, string $type, string $storePath, int $ttlSeconds, bool $jsEncrypt): void
   {
     // Ensure directory exists
     $dir = dirname($storePath);
@@ -207,7 +281,7 @@ class FileHelper
     }
 
     // If valid file already exists, nothing to do
-    if (is_file($storePath) && (filemtime($storePath) + $ttlSeconds >= time())) {
+    if (is_file($storePath)) {
       return;
     }
 
@@ -215,34 +289,26 @@ class FileHelper
 
     // Try to become the builder
     $fp = @fopen($tmpPath, 'c'); // temp file, not the final
+    
     if ($fp && flock($fp, LOCK_EX | LOCK_NB)) {
       try {
-        // Double-check: maybe another request finished while we waited
-        if (is_file($storePath) && (filemtime($storePath) + $ttlSeconds >= time())) {
+        // Double-check after acquiring lock, maybe another request finished while we waited
+        if (is_file($storePath)) {
           return;
         }
 
         // Merge file contents
         $mergedContent = '';
-        foreach ($filePaths as $item) {
+
+        foreach ($resolvedPaths as $item) {
           // Validate file extension
           $ext = pathinfo($item, PATHINFO_EXTENSION);
           if ($ext !== $type) {
             throw new \Exception("File type mismatch: Expected {$type}, got {$ext} in {$item}");
           }
 
-          // Build possible paths
-          $publicPath = public_path($item);
-          $resourcePath = resource_path("{$type}/{$item}");
-
-          // Read file (prefer public/, fallback to resources/)
-          if (is_file($publicPath)) {
-            $mergedContent .= file_get_contents($publicPath) . "\n";
-          } elseif (is_file($resourcePath)) {
-            $mergedContent .= file_get_contents($resourcePath) . "\n";
-          } else {
-            throw new \Exception("File does not exist: {$item}");
-          }
+          // Read file
+          $mergedContent .= file_get_contents($item) . "\n";
         }
 
         // Minify + optional encryption
@@ -260,19 +326,24 @@ class FileHelper
         fclose($fp);
       }
     } else {
-      // We are not the builder → wait for the final file to appear
-      $maxWait = 3000; // ms → 3 sec
-      $step = 100;     // ms
+      // Another process is building → wait
+      $maxWait = 3000; // 3 seconds
+      $step = 100;     // start with 100ms
       $waited = 0;
 
       while ($waited < $maxWait) {
-        if (is_file($storePath) && (filemtime($storePath) + $ttlSeconds >= time())) {
-          return; // file ready
+        if (is_file($storePath)) {
+          return; // file is ready
         }
+
         usleep($step * 1000); // sleep 100ms
         $waited += $step;
+
+        // Exponential backoff
+        $step = min($step * 2, 500);
       }
 
+      // Timeout handling
       if (app()->environment('production')) {
         logger()->warning("AssetOptimise: Timed out waiting for asset build: {$storePath}");
         return; // soft skip

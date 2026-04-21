@@ -15,11 +15,12 @@ Asset Optimise is a powerful and lightweight Laravel package designed to enhance
 9. Support multiple assets (CSS or JavaScript) merge and minify. [Read More...](#merge-and-minify-multiple-assets-css-or-javascript)
 10. Support asset (CSS or JavaScript) minification. [Read More...](#minify-asset-css-or-javascript)
 11. Provides an Artisan command to clear generated minified assets for storage management. [Read More...](#clear-minified-assets)
-12. Extensible for future updates, including image compression and CDN integration.
+12. Configurable hashing strategy (filemtime or content-based) for reliable cache invalidation.
+13. Extensible for future updates, including image compression and CDN integration.
 
 ## Installation
 
-Asset Optimise for Laravel requires PHP 8.0 or higher. This particular version supports Laravel 9.x, 10.x, 11.x, and 12.x.
+Asset Optimise for Laravel requires PHP 8.0 or higher. This particular version supports Laravel 9.x, 10.x, 11.x, 12.x and 13.x.
 
 To get the latest version, simply require the project using [Composer](https://getcomposer.org):
 
@@ -171,6 +172,7 @@ You must set `true` on `email_enabled` in the `config/assetoptimise.php` file to
 ```php
 'email_enabled' => env('ASSETOPTIMISE_EMAIL_ENABLED', true),
 ```
+
 ### JavaScript Encrypt Domains
 Add domains in the `config/assetoptimise.php` file for more security, then encrypted JavaScript code will only work on those domains. For example:
 
@@ -187,6 +189,23 @@ Add domains in the `config/assetoptimise.php` file for more security, then encry
 - This may cause an error if the code is not written properly. Please use with caution!
 - Although this can provide a high security level, a potentially thief can try to de-obfuscate and reach a closer code to the original one due to the public and open architecture of JavaScript.
 - So it's not recommended to use this to protect sensitive information.
+
+### Strict Hash Mode
+
+This option controls how asset file hashes are generated.
+
+When enabled, Asset Optimise will generate hashes based on the actual file contents using `md5_file()`. This guarantees that any change in file content will always produce a new optimized file, making it highly reliable across all environments. However, this approach requires reading file contents to generate hashes, which makes it slower than filemtime-based hashing.
+
+When disabled (default), the package generates hashes using the file path and last modified time (`filemtime`). This approach is faster and reduces disk I/O, but may not detect changes in certain deployment environments where file timestamps are preserved (e.g., CI/CD pipelines, Docker builds, or zip deployments).
+
+#### Example:
+
+```php
+'strict_hash' => env('ASSETOPTIMISE_STRICT_HASH', true),
+```
+#### Please Note:
+- Use `false` (default) for local development and small projects where performance is preferred.
+- Use `true` for production environments to ensure accurate cache invalidation and avoid stale assets, even though it introduces a slight performance overhead due to content-based hashing.
 
 ### Merge and Minify multiple assets (CSS or JavaScript)
 You can use `minifyAssets()` helper function that allows you to merge and minify your multiple CSS or JavaScript files. This function will handle both `public` and `resources` directories, storing the final output file in your storage folder for optimized use. It reduces the number of HTTP requests and speeds up the loading of assets.

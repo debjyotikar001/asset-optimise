@@ -123,4 +123,28 @@ return [
     // 'example2.com',
   ],
 
+  /*
+  |--------------------------------------------------------------------------
+  | Strict Hash Mode
+  |--------------------------------------------------------------------------
+  |
+  | This option controls how asset file hashes are generated.
+  |
+  | When set to true, the package will generate hashes based on the actual
+  | file contents using md5_file(). This ensures that any change in file
+  | content will always generate a new optimized file, regardless of file
+  | timestamps. This is the most reliable approach and recommended for
+  | production environments. However, this method performs additional disk
+  | reads to calculate file hashes, making it slower compared to 
+  | filemtime-based hashing.
+  |
+  | When set to false, the package will generate hashes using the file path
+  | and last modified time (filemtime). This is faster and reduces disk I/O,
+  | but may fail in certain deployment environments where file timestamps
+  | do not change (e.g., CI/CD pipelines, Docker builds, or zip deployments).
+  |
+  | Default: false
+  |
+  */
+  'strict_hash' => env('ASSETOPTIMISE_STRICT_HASH', false),
 ];
